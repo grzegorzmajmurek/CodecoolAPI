@@ -37,7 +37,7 @@ namespace CodecoolApi.Data
         {
             var reviews = new List<Review>()
                 {
-                    new Review() { Title = "Test"}
+                    new Review() { Text = "Test"}
                 };
             context.Reviews.AddRange(reviews);
             context.SaveChanges();

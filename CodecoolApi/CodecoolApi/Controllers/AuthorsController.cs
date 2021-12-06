@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CodecoolApi.DAL.DTO.Author;
 using CodecoolApi.Models;
 using CodecoolApi.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
@@ -70,10 +71,10 @@ namespace CodecoolApi.Controllers
         /// </summary>
         [SwaggerOperation(Summary = "Post a new author")]
         [HttpPost]
-        public async Task<IActionResult> PostAuthor()
+        public async Task<IActionResult> PostAuthor(PostAuthorDto author)
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
-            await _authorRepository.CreateAsync(new Author());
+            await _authorRepository.CreateAsync(_mapper.Map<Author>(author));
             return Ok();
         }
 
@@ -103,7 +104,7 @@ namespace CodecoolApi.Controllers
         /// </summary>
         [SwaggerOperation(Summary = "Change existing author")]
         [HttpPut]
-        public async Task<IActionResult> PutAuthor(Author author)
+        public async Task<IActionResult> PutAuthor(PutAuthorDto author)
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
             if (author == null)
@@ -112,7 +113,7 @@ namespace CodecoolApi.Controllers
                 return BadRequest();
             }
 
-            await _authorRepository.UpdateAsync(author);
+            await _authorRepository.UpdateAsync(_mapper.Map<Author>(author));
             _logger.LogInformation($"Author changed");
             return Ok();
         }
