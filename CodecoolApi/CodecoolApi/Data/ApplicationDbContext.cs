@@ -13,10 +13,5 @@ namespace CodecoolApi.Data
         public DbSet<Material> Materials { get; set; }
         public DbSet<MaterialType> MaterialsTypes { get; set; }
         public DbSet<Review> Reviews { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Initialize();
-        }
     }
 }

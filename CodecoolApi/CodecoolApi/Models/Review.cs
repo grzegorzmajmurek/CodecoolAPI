@@ -2,6 +2,6 @@
 {
     public class Review : BaseEntity
     {
-
+        public string Title { get; set; }
     }
 }

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CodecoolApi.Repository
 {
-    public class Repository<T> : IRepository<T> where T : class
+    public class Repository<T> : IRepository<T> where T : BaseEntity
     {
         private readonly ApplicationDbContext _db;
 
@@ -48,6 +48,11 @@ namespace CodecoolApi.Repository
         {
             IEnumerable<T> loadedEntities = includeQuery(_db.Set<T>());
             return singleQuery(loadedEntities);
+        }
+
+        public async Task<T> GetEntityByQuery(Func<T, bool> query)
+        {
+            return await _db.Set<T>().ToAsyncEnumerable().SingleOrDefaultAsync(query);
         }
     }
 }

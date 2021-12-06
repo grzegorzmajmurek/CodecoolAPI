@@ -3,36 +3,73 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CodecoolApi.Data
 {
-    public static class CodecoolDbSeeder
+    public class CodecoolDbSeeder
     {
-        public static void Initialize(this ModelBuilder modelBuilder)
+        private readonly ApplicationDbContext _context;
+
+        public CodecoolDbSeeder(ApplicationDbContext context)
         {
-            modelBuilder.Entity<Material>().HasData(
-                new Material
+            _context = context;
+        }
+
+        public void Seed()
+        {
+            if (!_context.MaterialsTypes.Any())
+            {
+                AddMaterialTypes(_context);
+                AddReviews(_context);
+                AddAuthors(_context);
+                AddMaterials(_context);
+            }
+        }
+
+        private void AddMaterialTypes(ApplicationDbContext context)
+        {
+            var materialTypes = new List<MaterialType>()
                 {
-                    Id = 1,
-                    Title = "Nowa publikacja",
-                    Description = "Najlepsza publikacja jaka jest",
-                    Location = "Zachodnia 15/69",
-                    Type = new MaterialType
-                    {
-                        Id = 1,
-                        Name = "Material type 1",
-                        Definition = "Definicja 1"
-                    },
-                    Reviews = new List<Review>(),
-                    PublishDate = DateTime.Now,
-                    AuthorId = 1,
-                    Author = new Author
-                    {
-                        Id = 1,
-                        Name = "Michał",
-                        Description = "Michała publikacja",
-                        Materials = new List<Material>(),
-                        NumbersOfMaterials = 1
+                    new MaterialType() { Name = "Test", Definition = "TEst"}
+                };
+            context.MaterialsTypes.AddRange(materialTypes);
+            context.SaveChanges();
+        }
+
+        private void AddReviews(ApplicationDbContext context)
+        {
+            var reviews = new List<Review>()
+                {
+                    new Review() { Title = "Test"}
+                };
+            context.Reviews.AddRange(reviews);
+            context.SaveChanges();
+        }
+
+        private void AddAuthors(ApplicationDbContext context)
+        {
+            var authors = new List<Author>()
+            {
+                new Author() { Name = "Test", Description = "Test", NumbersOfMaterials = 0}
+            };
+            context.Authors.AddRange(authors);
+            context.SaveChanges();
+        }
+
+        private void AddMaterials(ApplicationDbContext context)
+        {
+            var materials = new List<Material>()
+                {
+                    new Material() {
+                        Title = "Test",
+                        Description = "Test",
+                        Location = "Test",
+                        Type = context.MaterialsTypes.Single(x => x.Name == "Test"),
+                        PublishDate = DateTime.UtcNow,
+                        Author = context.Authors.Single(x => x.Name == "Test"),
+                        Reviews = new List<Review>()
                     }
-                }
-                );
+                };
+            context.Materials.AddRange(materials);
+            context.SaveChanges();
         }
     }
 }
+
