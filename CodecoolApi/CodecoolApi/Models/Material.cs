@@ -10,8 +10,7 @@ namespace CodecoolApi.Models
         public string Location { get; set; }
         public MaterialType Type { get; set; }
         public ICollection<Review> Reviews { get; set; }
-        public DataType PublishDate { get; set; }
-        public Author Author { get; set; }
-
+        public DateTime PublishDate { get; set; }
+        public int AuthorId { get; set; }
     }
 }

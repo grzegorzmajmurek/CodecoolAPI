@@ -1,4 +1,5 @@
 ﻿using CodecoolApi.Data;
+using CodecoolApi.Models;
 using CodecoolApi.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,7 +42,12 @@ namespace CodecoolApi.Repository
             _db.Entry<T>(entity).State = EntityState.Modified;
             var saveChanges = await _db.SaveChangesAsync();
             return saveChanges >= 0;
+        }
 
+        public async Task<T> GetEntityByQueryEager(Func<DbSet<T>, IEnumerable<T>> includeQuery, Func<IEnumerable<T>, T> singleQuery)
+        {
+            IEnumerable<T> loadedEntities = includeQuery(_db.Set<T>());
+            return singleQuery(loadedEntities);
         }
     }
 }
