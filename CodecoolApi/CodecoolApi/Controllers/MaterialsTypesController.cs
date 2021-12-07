@@ -114,7 +114,16 @@ namespace CodecoolApi.Controllers
                 return BadRequest();
             }
 
-            await _materialTypeRepository.UpdateAsync(materialType);
+            try
+            {
+                await _materialTypeRepository.UpdateAsync(materialType);
+                _logger.LogInformation($"Material type changed");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while updating material types");
+                return StatusCode(409, "Error while updating material types.\r\n" + ex.Message.Split('.')[0]);
+            }
             _logger.LogInformation($"Material type changed");
             return Ok();
         }

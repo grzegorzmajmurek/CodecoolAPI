@@ -114,7 +114,16 @@ namespace CodecoolApi.Controllers
                 return BadRequest();
             }
 
-            await _reviewRepository.UpdateAsync(review);
+            try
+            {
+                await _reviewRepository.UpdateAsync(review);
+                _logger.LogInformation($"Review type changed");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while updating reviews");
+                return StatusCode(409, "Error while updating reviews.\r\n" + ex.Message.Split('.')[0]);
+            }
             _logger.LogInformation($"Review type changed");
             return Ok();
         }

@@ -248,8 +248,19 @@ namespace CodecoolApi.Controllers
                 return BadRequest();
             }
 
-            await _materialRepository.UpdateAsync(material);
-            _logger.LogInformation($"Material deleted");
+            try
+            {
+                await _materialRepository.UpdateAsync(material);
+                _logger.LogInformation($"Material changed");
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex, "Error while updating materials");
+                return StatusCode(409, "Error while updating materials.\r\n" + ex.Message.Split('.')[0]);
+            }
+
+            _logger.LogInformation($"Material modified");
             return Ok();
         }
     }

@@ -128,8 +128,17 @@ namespace CodecoolApi.Controllers
                 return BadRequest();
             }
 
-            await _authorRepository.UpdateAsync(_mapper.Map<Author>(author));
-            _logger.LogInformation($"Author changed");
+            try
+            {
+                await _authorRepository.UpdateAsync(_mapper.Map<Author>(author));
+                _logger.LogInformation($"Author changed");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while updating author");
+                return StatusCode(409, "Error while updating author.\r\n" + ex.Message.Split('.')[0]);
+            }
+            _logger.LogInformation($"Author modified");
             return Ok();
         }
     }
