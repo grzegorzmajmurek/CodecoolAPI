@@ -29,7 +29,7 @@ namespace CodecoolApi.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAllMaterials()
+        public async Task<IActionResult> GetAllMaterials(string sortNumberOfMaterial)
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
             var result = await _authorRepository.GetAllAsync();
@@ -39,8 +39,23 @@ namespace CodecoolApi.Controllers
                 _logger.LogInformation($"Authors NotFound");
                 return NotFound();
             }
+
             _logger.LogInformation($"Return {await result.CountAsync()} of {result.GetType()}");
             List<Author> authors = await result.ToListAsync();
+
+            switch (sortNumberOfMaterial)
+            {
+                case "desc":
+                    result = result.OrderByDescending(x => x.NumbersOfMaterials);
+                    break;
+                case "asc":
+                    result = result.OrderBy(x => x.NumbersOfMaterials);
+                    break;
+                default:
+                    result = await _authorRepository.GetAllAsync();
+                    break;
+            }
+
             return Ok(authors);
         }
 

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CodecoolApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20211206160936_Initial")]
-    partial class Initial
+    [Migration("20211207091145_InitialNewState")]
+    partial class InitialNewState
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -115,10 +115,13 @@ namespace CodecoolApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int?>("MaterialId")
+                    b.Property<int>("MaterialId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Title")
+                    b.Property<int>("ReviewScore")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -150,9 +153,13 @@ namespace CodecoolApi.Migrations
 
             modelBuilder.Entity("CodecoolApi.Models.Review", b =>
                 {
-                    b.HasOne("CodecoolApi.Models.Material", null)
+                    b.HasOne("CodecoolApi.Models.Material", "Material")
                         .WithMany("Reviews")
-                        .HasForeignKey("MaterialId");
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Material");
                 });
 
             modelBuilder.Entity("CodecoolApi.Models.Author", b =>

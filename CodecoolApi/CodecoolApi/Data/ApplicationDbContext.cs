@@ -13,5 +13,6 @@ namespace CodecoolApi.Data
         public DbSet<Material> Materials { get; set; }
         public DbSet<MaterialType> MaterialsTypes { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }

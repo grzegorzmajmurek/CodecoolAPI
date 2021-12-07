@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CodecoolApi.DAL.DTO.Review;
 using CodecoolApi.Models;
 using CodecoolApi.Repository.IRepository;
 using Microsoft.AspNetCore.Http;
@@ -71,10 +72,10 @@ namespace CodecoolApi.Controllers
         /// </summary>
         [SwaggerOperation(Summary = "Post a new review")]
         [HttpPost]
-        public async Task<IActionResult> PostReview()
+        public async Task<IActionResult> PostReview(PostReviewDto review)
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
-            await _reviewRepository.CreateAsync(new Review());
+            await _reviewRepository.CreateAsync(_mapper.Map<Review>(review));
             return Ok();
         }
 

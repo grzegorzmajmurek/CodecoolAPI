@@ -2,8 +2,8 @@
 {
     public class Review : BaseEntity
     {
-        public int MaterialId { get; set; }
-        public string Text { get; set; }
+        public Material Material { get; set; }
+        public string? Text { get; set; }
         public int ReviewScore { get; set; }
     }
 }

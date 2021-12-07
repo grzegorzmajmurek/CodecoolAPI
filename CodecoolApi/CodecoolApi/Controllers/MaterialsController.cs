@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CodecoolApi.DAL.DTO.Material;
 using CodecoolApi.Models;
 using CodecoolApi.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
@@ -143,10 +144,10 @@ namespace CodecoolApi.Controllers
         /// </summary>
         [SwaggerOperation(Summary = "Post a new material")]
         [HttpPost]
-        public async Task<IActionResult> PostMaterial()
+        public async Task<IActionResult> PostMaterial(PostMaterialDto material)
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
-            await _materialRepository.CreateAsync(new Material());
+            await _materialRepository.CreateAsync(_mapper.Map<Material>(material));
             return Ok();
         }
 
