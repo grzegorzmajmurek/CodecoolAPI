@@ -4,6 +4,7 @@ using CodecoolApi.Models;
 using CodecoolApi.Repository.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace CodecoolApi.Controllers
@@ -15,12 +16,14 @@ namespace CodecoolApi.Controllers
         private readonly ILogger<MaterialsController> _logger;
         private readonly IMapper _mapper;
         private readonly IRepository<MaterialType> _materialTypeRepository;
+        private readonly IRepository<Material> _materialRepository;
 
-        public MaterialsTypesController(ILogger<MaterialsController> logger, IRepository<MaterialType> materialTypeRepository, IMapper mapper)
+        public MaterialsTypesController(ILogger<MaterialsController> logger, IRepository<MaterialType> materialTypeRepository, IRepository<Material> materialRepository, IMapper mapper)
         {
             _logger = logger;
             _mapper = mapper;
             _materialTypeRepository = materialTypeRepository;
+            _materialRepository = materialRepository;
         }
 
         /// <summary>
@@ -33,7 +36,10 @@ namespace CodecoolApi.Controllers
         public async Task<IActionResult> GetAllMaterialsTypes()
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
-            var result = await _materialTypeRepository.GetAllAsync();
+            var result = await _materialTypeRepository.EnlistAllEager(x =>
+                  x.Include(type => type.Materials)
+                );
+
 
             if (result == null)
             {
@@ -42,7 +48,7 @@ namespace CodecoolApi.Controllers
             }
             _logger.LogInformation($"Return {await result.CountAsync()} of {result.GetType()}");
             List<MaterialType> materialTypes = await result.ToListAsync();
-            return Ok(materialTypes);
+            return Ok(_mapper.Map<IEnumerable<GetMaterialTypeDto>>(materialTypes));
         }
 
         /// <summary>
@@ -126,6 +132,34 @@ namespace CodecoolApi.Controllers
             }
             _logger.LogInformation($"Material type changed");
             return Ok();
+        }
+
+        [SwaggerOperation(Summary = "Assign material to material type")]
+        [HttpPut("{id}/Materials/{materialId}")]
+        public async Task<IActionResult> PutMaterialToMaterialType(int id, int materialId)
+        {
+            _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
+            var result = await _materialTypeRepository.GetEntityByQueryEager(x => x.Include(material => material.Materials), x => x.SingleOrDefault(material => material.Id == id));
+            var materials = await _materialRepository.GetEntityByQuery(x => x.Id == materialId);
+
+            if (result == null || materials == null)
+            {
+                _logger.LogInformation($"BadRequest");
+                return BadRequest();
+            }
+
+            if (result.Materials == null)
+                result.Materials = new List<Material>();
+
+            if (!result.Materials.Contains(materials))
+            {
+                result.Materials.Add(materials);
+                await _materialTypeRepository.UpdateAsync(result);
+                _logger.LogInformation($"Material assigned to Material Type");
+                return Ok();
+            }
+
+            return NotFound();
         }
     }
 }

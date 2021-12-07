@@ -2,24 +2,29 @@
 using CodecoolApi.DAL.DTO.Author;
 using CodecoolApi.Models;
 using CodecoolApi.Repository.IRepository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace CodecoolApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class AuthorsController : ControllerBase
     {
         private readonly ILogger<MaterialsController> _logger;
         private readonly IMapper _mapper;
         private readonly IRepository<Author> _authorRepository;
+        private readonly IRepository<Material> _materialRepository;
 
-        public AuthorsController(ILogger<MaterialsController> logger, IRepository<Author> authorRepository, IMapper mapper)
+        public AuthorsController(ILogger<MaterialsController> logger, IRepository<Author> authorRepository, IRepository<Material> materialRepository, IMapper mapper)
         {
             _logger = logger;
             _mapper = mapper;
             _authorRepository = authorRepository;
+            _materialRepository = materialRepository;
         }
 
         /// <summary>
@@ -29,10 +34,14 @@ namespace CodecoolApi.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAllMaterials(string sortNumberOfMaterial)
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllAuthors()
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
-            var result = await _authorRepository.GetAllAsync();
+            var result = await _authorRepository.EnlistAllEager(authors =>
+                  authors
+                  .Include(author => author.Materials)
+                );
 
             if (result == null)
             {
@@ -42,21 +51,7 @@ namespace CodecoolApi.Controllers
 
             _logger.LogInformation($"Return {await result.CountAsync()} of {result.GetType()}");
             List<Author> authors = await result.ToListAsync();
-
-            switch (sortNumberOfMaterial)
-            {
-                case "desc":
-                    result = result.OrderByDescending(x => x.NumbersOfMaterials);
-                    break;
-                case "asc":
-                    result = result.OrderBy(x => x.NumbersOfMaterials);
-                    break;
-                default:
-                    result = await _authorRepository.GetAllAsync();
-                    break;
-            }
-
-            return Ok(authors);
+            return Ok(_mapper.Map<IEnumerable<GetAuthorDto>>(authors));
         }
 
         /// <summary>
@@ -66,6 +61,7 @@ namespace CodecoolApi.Controllers
         [HttpGet("id")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Author>))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAuthorById(int id)
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
@@ -128,18 +124,37 @@ namespace CodecoolApi.Controllers
                 return BadRequest();
             }
 
-            try
-            {
-                await _authorRepository.UpdateAsync(_mapper.Map<Author>(author));
-                _logger.LogInformation($"Author changed");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while updating author");
-                return StatusCode(409, "Error while updating author.\r\n" + ex.Message.Split('.')[0]);
-            }
-            _logger.LogInformation($"Author modified");
+            await _authorRepository.UpdateAsync(_mapper.Map<Author>(author));
+            _logger.LogInformation($"Author changed");
             return Ok();
+        }
+
+        [SwaggerOperation(Summary = "Assign Material to author")]
+        [HttpPut("{id}/Materials/{materialId}")]
+        public async Task<IActionResult> PutMaterialToAuthor(int id, int materialId)
+        {
+            _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
+            var result = await _authorRepository.GetEntityByQueryEager(authors => authors.Include(author => author.Materials), authors => authors.SingleOrDefault(author => author.Id == id));
+            var materials = await _materialRepository.GetEntityByQuery(x => x.Id == materialId);
+
+            if (result == null || materials == null)
+            {
+                _logger.LogInformation($"BadRequest");
+                return BadRequest();
+            }
+
+            if (result.Materials == null)
+                result.Materials = new List<Material>();
+
+            if (!result.Materials.Contains(materials))
+            {
+                result.Materials.Add(materials);
+                await _authorRepository.UpdateAsync(result);
+                _logger.LogInformation($"Material assigned to Author");
+                return Ok();
+            }
+
+            return NotFound();
         }
     }
 }

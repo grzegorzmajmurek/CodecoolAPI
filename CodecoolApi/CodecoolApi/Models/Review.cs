@@ -1,9 +1,14 @@
-﻿namespace CodecoolApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CodecoolApi.Models
 {
     public class Review : BaseEntity
     {
-        public Material Material { get; set; }
-        public string? Text { get; set; }
+        [MaxLength(250)]
+        public string Text { get; set; }
+        [Range(0, 10)]
         public int ReviewScore { get; set; }
+
+        public Material? Material { get; set; }
     }
 }

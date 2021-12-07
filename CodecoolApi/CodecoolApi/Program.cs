@@ -1,15 +1,13 @@
 using CodecoolApi;
 using CodecoolApi.Data;
-using CodecoolApi.Mapper;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-//builder.Services.AddTransient<CodecoolDbSeeder>();
+builder.Services.AddTransient<CodecoolDbSeeder>();
 builder.Services.AddDbContext<ApplicationDbContext>(x => x.UseSqlServer(connectionString));
-builder.Services.AddSingleton(AutoMapperConfig.Initialize());
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -34,17 +32,17 @@ builder.Services.ConfigureJWTAuthentication(builder);
 
 var app = builder.Build();
 
-//SeedData(app);
+SeedData(app);
 
-//void SeedData(IHost app)
-//{
-//    var scopeFactory = app.Services.GetService<IServiceScopeFactory>();
-//    using(var scope = scopeFactory.CreateScope())
-//    {
-//        var service = scope.ServiceProvider.GetService<CodecoolDbSeeder>();
-//        service.Seed();
-//    }
-//}
+void SeedData(IHost app)
+{
+    var scopeFactory = app.Services.GetService<IServiceScopeFactory>();
+    using (var scope = scopeFactory.CreateScope())
+    {
+        var service = scope.ServiceProvider.GetService<CodecoolDbSeeder>();
+        service.Seed();
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

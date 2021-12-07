@@ -37,7 +37,11 @@ namespace CodecoolApi.Controllers
         public async Task<IActionResult> GetAllMaterials()
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
-            var result = await _materialRepository.GetAllAsync();
+            var result = await _materialRepository.EnlistAllEager(
+                materials => materials
+                .Include(x => x.Reviews)
+                .Include(x => x.Type)
+                .Include(x => x.Author));
 
             if (result == null)
             {
@@ -46,7 +50,7 @@ namespace CodecoolApi.Controllers
             }
             _logger.LogInformation($"Return {await result.CountAsync()} of {result.GetType()}");
             List<Material> materials = await result.ToListAsync();
-            return Ok(materials);
+            return Ok(_mapper.Map<IEnumerable<GetMaterialDto>>(materials));
         }
 
         /// <summary>
@@ -147,7 +151,13 @@ namespace CodecoolApi.Controllers
         public async Task<IActionResult> PostMaterial(PostMaterialDto material)
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
-            await _materialRepository.CreateAsync(_mapper.Map<Material>(material));
+            await _materialRepository.CreateAsync(new Material()
+            {
+                Title = material.Title,
+                Description = material.Description,
+                Location = material.Location,
+                PublishDate = material.PublishDate,
+            });
             return Ok();
         }
 
@@ -171,30 +181,6 @@ namespace CodecoolApi.Controllers
             _logger.LogInformation($"Deleted {result.GetType()}");
             return Ok();
         }
-
-        /// <summary>
-        /// Delete author from materials
-        /// </summary>
-        //[SwaggerOperation(Summary = "Delete review from materials")]
-        //[HttpDelete("{id}/Authors")]
-        //public async Task<IActionResult> DeleteAuthorFromMaterial(int id)
-        //{
-        //    _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
-        //    var result = await _materialRepository.GetEntityByQueryEager(material => material.Include(material => material.Author), material => material.SingleOrDefault(material => material.Id == id));
-
-        //    if (result == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    if (result.Author == null)
-        //    {
-        //        return BadRequest();
-        //    }
-
-        //    var author = await _authorRepository.GetEntityByQueryEager(x => x.AsNoTracking().Include(x => x.Materials), x => x.FirstOrDefault(x => x.Id == result.Author.Id));
-
-        //}
 
         /// <summary>
         /// Delete review from materials
@@ -248,20 +234,37 @@ namespace CodecoolApi.Controllers
                 return BadRequest();
             }
 
-            try
-            {
-                await _materialRepository.UpdateAsync(material);
-                _logger.LogInformation($"Material changed");
-            }
-            catch (Exception ex)
-            {
-
-                _logger.LogError(ex, "Error while updating materials");
-                return StatusCode(409, "Error while updating materials.\r\n" + ex.Message.Split('.')[0]);
-            }
-
-            _logger.LogInformation($"Material modified");
+            await _materialRepository.UpdateAsync(material);
+            _logger.LogInformation($"Material deleted");
             return Ok();
+        }
+
+        [SwaggerOperation(Summary = "Assign Review to Material")]
+        [HttpPut("{id}/Reviews/{reviewId}")]
+        public async Task<IActionResult> PutMaterialToAuthor(int id, int reviewId)
+        {
+            _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
+            var result = await _materialRepository.GetEntityByQueryEager(x => x.Include(author => author.Reviews), x => x.SingleOrDefault(material => material.Id == id));
+            var reviews = await _reviewRepository.GetEntityByQuery(x => x.Id == reviewId);
+
+            if (result == null || reviews == null)
+            {
+                _logger.LogInformation($"BadRequest");
+                return BadRequest();
+            }
+
+            if (result.Reviews == null)
+                result.Reviews = new List<Review>();
+
+            if (!result.Reviews.Contains(reviews))
+            {
+                result.Reviews.Add(reviews);
+                await _materialRepository.UpdateAsync(result);
+                _logger.LogInformation($"Review assigned to Material");
+                return Ok();
+            }
+
+            return NotFound();
         }
     }
 }

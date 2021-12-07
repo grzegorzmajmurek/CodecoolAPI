@@ -54,5 +54,10 @@ namespace CodecoolApi.Repository
         {
             return await _db.Set<T>().ToAsyncEnumerable().SingleOrDefaultAsync(query);
         }
+
+        public async Task<IAsyncEnumerable<T>> EnlistAllEager(Func<DbSet<T>, IEnumerable<T>> includeQuery)
+        {
+            return includeQuery(_db.Set<T>()).ToAsyncEnumerable();
+        }
     }
 }

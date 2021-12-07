@@ -63,7 +63,7 @@ namespace CodecoolApi.Repository
             {
                 UserName = username,
                 Password = password,
-                Role = "admin"
+                Role = "Admin"
             };
             _db.Users.Add(userObj);
             _db.SaveChanges();
