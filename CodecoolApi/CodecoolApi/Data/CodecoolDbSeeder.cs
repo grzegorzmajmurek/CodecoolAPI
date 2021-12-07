@@ -1,5 +1,4 @@
 ﻿using CodecoolApi.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace CodecoolApi.Data
 {

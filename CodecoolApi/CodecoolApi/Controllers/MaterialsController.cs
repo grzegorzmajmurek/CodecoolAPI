@@ -16,7 +16,6 @@ namespace CodecoolApi.Controllers
         private readonly IMapper _mapper;
         private readonly IRepository<Material> _materialRepository;
         private readonly IRepository<Review> _reviewRepository;
-        private readonly IRepository<Author> _authorRepository;
 
         public MaterialsController(ILogger<MaterialsController> logger, IMapper mapper, IRepository<Material> materialRepository, IRepository<Review> reviewRepository, IRepository<Author> authorRepository)
         {
@@ -24,7 +23,6 @@ namespace CodecoolApi.Controllers
             _mapper = mapper;
             _materialRepository = materialRepository;
             _reviewRepository = reviewRepository;
-            _authorRepository = authorRepository;
         }
 
         /// <summary>
@@ -151,13 +149,7 @@ namespace CodecoolApi.Controllers
         public async Task<IActionResult> PostMaterial(PostMaterialDto material)
         {
             _logger.LogInformation($"Enter {HttpContext.Request.Path}{HttpContext.Request.QueryString}");
-            await _materialRepository.CreateAsync(new Material()
-            {
-                Title = material.Title,
-                Description = material.Description,
-                Location = material.Location,
-                PublishDate = material.PublishDate,
-            });
+            await _materialRepository.CreateAsync(_mapper.Map<Material>(material));
             return Ok();
         }
 
@@ -233,9 +225,19 @@ namespace CodecoolApi.Controllers
                 _logger.LogInformation($"BadRequest");
                 return BadRequest();
             }
+            try
+            {
+                await _materialRepository.UpdateAsync(material);
+                _logger.LogInformation($"Material changed");
+            }
+            catch (Exception ex)
+            {
 
-            await _materialRepository.UpdateAsync(material);
-            _logger.LogInformation($"Material deleted");
+                _logger.LogError(ex, "Error while updating materials");
+                return StatusCode(409, "Error while updating materials.\r\n" + ex.Message.Split('.')[0]);
+            }
+
+            _logger.LogInformation($"Material modified");
             return Ok();
         }
 

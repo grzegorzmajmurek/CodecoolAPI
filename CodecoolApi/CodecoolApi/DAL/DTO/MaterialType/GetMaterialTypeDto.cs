@@ -1,6 +1,8 @@
-﻿namespace CodecoolApi.DAL.DTO.MaterialType
+﻿using CodecoolApi.Models;
+
+namespace CodecoolApi.DAL.DTO.MaterialType
 {
-    public class GetMaterialTypeDto
+    public class GetMaterialTypeDto : BaseEntity
     {
         public string Name { get; set; }
         public string Definition { get; set; }

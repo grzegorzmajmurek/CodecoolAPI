@@ -1,6 +1,8 @@
-﻿namespace CodecoolApi.DAL.DTO.Author
+﻿using CodecoolApi.Models;
+
+namespace CodecoolApi.DAL.DTO.Author
 {
-    public class GetAuthorDto
+    public class GetAuthorDto : BaseEntity
     {
         public string UserName { get; set; }
         public string Description { get; set; }

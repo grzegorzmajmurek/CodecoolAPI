@@ -2,7 +2,6 @@
 using CodecoolApi.DAL.DTO.Review;
 using CodecoolApi.Models;
 using CodecoolApi.Repository.IRepository;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 

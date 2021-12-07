@@ -2,7 +2,6 @@
 using CodecoolApi.DAL.DTO.MaterialType;
 using CodecoolApi.Models;
 using CodecoolApi.Repository.IRepository;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
@@ -39,7 +38,6 @@ namespace CodecoolApi.Controllers
             var result = await _materialTypeRepository.EnlistAllEager(x =>
                   x.Include(type => type.Materials)
                 );
-
 
             if (result == null)
             {
